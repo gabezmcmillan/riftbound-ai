@@ -171,6 +171,15 @@ terminal-only ±1 reward, gamma 0.997 to mildly prefer faster wins). The
 opponent-pool/league mechanism (sampling past checkpoints as opponents) is
 not built yet — pure current-policy self-play is v0.
 
+First training run (200 iterations x 64 games, 10 workers, ~12 min on a
+14-core laptop CPU, ~730k decisions): win rate vs random went from ~50% to
+95–100%; vs greedy from 0% to 30–45% on 20-game evals. A 100-game final
+benchmark: the policy **beats greedy 54–46 with the Yi deck** but loses
+17–83 with the Annie deck — consistent with the known deck imbalance and
+with pure self-play plateauing; the league mechanism is the next lever.
+Learning curves: `scripts/plot_training.py` renders
+`checkpoints/training_curves.png` from the JSONL log.
+
 ## Next steps
 
 1. **League play**: mix past checkpoints and scripted agents into the
