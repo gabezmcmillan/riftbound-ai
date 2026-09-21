@@ -38,7 +38,8 @@ python -m riftbound.cli --games 100 --p0 greedy --p1 random
 - **Agents** (`src/riftbound/agents/`): random (engine fuzzing), one-ply
   greedy (the scripted baseline; beats random 20–0), and determinized MCTS
   (samples worlds consistent with hidden information, runs UCT in each, and
-  aggregates root visits). Try it:
+  aggregates root visits). MCTS beats random 10–0 and beats greedy given
+  search budget (see `docs/engine-design.md` for benchmarks). Try it:
   `python -m riftbound.cli --games 10 --p0 mcts --p1 greedy`.
 - **Simulator** (`src/riftbound/sim.py`, `src/riftbound/cli.py`):
   head-to-head matches with stats; ~500 games/s for random agents.

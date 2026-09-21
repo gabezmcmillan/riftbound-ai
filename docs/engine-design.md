@@ -132,6 +132,13 @@ use determinization or IS-MCTS rather than raw tree search.
   worlds. Group moves are pruned to singletons + all-in (as in the codec)
   to control branching.
 
+Benchmarks (10-game matches unless noted): MCTS beats random 10-0 with
+either deck. Against greedy at the default budget (60 iterations x 4
+worlds) it wins 7-3 with the Yi deck but loses 1-9 with the Annie deck; at
+200 iterations x 6 worlds the Annie matchup flips to 5-1 (6 games), i.e.
+strength scales with search budget. Note the decks are not balanced — the
+Yi deck wins most mirror-agent pairings — so always benchmark both seats.
+
 ## Next steps
 
 1. **Self-play PPO** against the random/greedy/MCTS ladder, league-style.
