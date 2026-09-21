@@ -10,17 +10,21 @@ from __future__ import annotations
 import argparse
 import time
 
-from riftbound.agents import GreedyAgent, RandomAgent
+from riftbound.agents import GreedyAgent, MCTSAgent, RandomAgent
 from riftbound.cards import build_annie_deck, build_yi_deck
 from riftbound.sim import run_match
 
 
-def make_agent(name: str, seed: int):
+def make_agent(name: str, seed: int, mcts_iterations: int, mcts_worlds: int):
     if name == "random":
         return RandomAgent(seed=seed)
     if name == "greedy":
         return GreedyAgent(seed=seed)
-    raise SystemExit(f"unknown agent {name!r} (choose: random, greedy)")
+    if name == "mcts":
+        return MCTSAgent(
+            iterations=mcts_iterations, determinizations=mcts_worlds, seed=seed
+        )
+    raise SystemExit(f"unknown agent {name!r} (choose: random, greedy, mcts)")
 
 
 def main() -> None:
@@ -33,12 +37,17 @@ def main() -> None:
     parser.add_argument(
         "--swap-decks", action="store_true", help="give p0 the yi deck instead"
     )
+    parser.add_argument("--mcts-iterations", type=int, default=60)
+    parser.add_argument("--mcts-worlds", type=int, default=4)
     args = parser.parse_args()
 
     decks = (build_annie_deck(), build_yi_deck())
     if args.swap_decks:
         decks = (decks[1], decks[0])
-    agents = (make_agent(args.p0, args.seed), make_agent(args.p1, args.seed + 1))
+    agents = (
+        make_agent(args.p0, args.seed, args.mcts_iterations, args.mcts_worlds),
+        make_agent(args.p1, args.seed + 1, args.mcts_iterations, args.mcts_worlds),
+    )
 
     start = time.perf_counter()
     stats = run_match(

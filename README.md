@@ -35,8 +35,11 @@ python -m riftbound.cli --games 100 --p0 greedy --p1 random
   expressed in a data-driven effect vocabulary.
 - **Card database** (`data/cards.json`): all 1,180 cards with rules text,
   fetched from the community RiftScribe API (`scripts/fetch_cards.py`).
-- **Agents** (`src/riftbound/agents/`): random (engine fuzzing) and one-ply
-  greedy (the baseline to beat). Greedy beats random 20–0.
+- **Agents** (`src/riftbound/agents/`): random (engine fuzzing), one-ply
+  greedy (the scripted baseline; beats random 20–0), and determinized MCTS
+  (samples worlds consistent with hidden information, runs UCT in each, and
+  aggregates root visits). Try it:
+  `python -m riftbound.cli --games 10 --p0 mcts --p1 greedy`.
 - **Simulator** (`src/riftbound/sim.py`, `src/riftbound/cli.py`):
   head-to-head matches with stats; ~500 games/s for random agents.
 - **Encodings** (`src/riftbound/encoding.py`): fixed-size observation
@@ -48,6 +51,6 @@ python -m riftbound.cli --games 100 --p0 greedy --p1 random
 
 1. ~~Rules engine core + starter decks + scripted agents~~ (done)
 2. ~~State/action tensor encodings with legality masks~~ (done)
-3. Determinized MCTS (hidden information via sampled opponent hands)
+3. ~~Determinized MCTS (hidden information via sampled worlds)~~ (done)
 4. Self-play RL (PPO or AlphaZero-style policy+value net)
 5. Reaction/chain system; broader card coverage

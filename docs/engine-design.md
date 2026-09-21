@@ -116,9 +116,24 @@ use determinization or IS-MCTS rather than raw tree search.
 - Codec limitation: arbitrary move subsets aren't addressable (single-unit
   moves and all-in attacks only). Fix alongside the v1 engine work.
 
+## Determinized MCTS (implemented)
+
+`src/riftbound/agents/mcts_agent.py`:
+
+- `determinize(game, perspective, rng)`: clones the game and resamples what
+  the player can't see — the opponent's hand is pooled with their deck and
+  redealt, both main-deck and rune-deck orders are shuffled, and the clone
+  gets an independent RNG. Public zones are untouched. (Assumes the
+  opponent's decklist is known — true in self-play.)
+- `MCTSAgent(iterations, determinizations)`: standard UCT per determinized
+  world (after determinization the game is deterministic), leaf evaluation
+  via the greedy agent's static score squashed to [0, 1] (no rollouts),
+  opponent nodes minimize, and root visit counts are aggregated across
+  worlds. Group moves are pruned to singletons + all-in (as in the codec)
+  to control branching.
+
 ## Next steps
 
-1. **Determinized MCTS** baseline over the engine.
-2. **Self-play PPO** against the greedy/random ladder, league-style.
-3. **v1 engine**: reaction windows (start with Action/Reaction spells in
+1. **Self-play PPO** against the random/greedy/MCTS ladder, league-style.
+2. **v1 engine**: reaction windows (start with Action/Reaction spells in
    showdowns), agent-controlled damage assignment, mulligans.
