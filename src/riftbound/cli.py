@@ -15,7 +15,7 @@ from riftbound.cards import build_annie_deck, build_yi_deck
 from riftbound.sim import run_match
 
 
-def make_agent(name: str, seed: int, mcts_iterations: int, mcts_worlds: int):
+def make_agent(name: str, seed: int, mcts_iterations: int, mcts_worlds: int, checkpoint: str):
     if name == "random":
         return RandomAgent(seed=seed)
     if name == "greedy":
@@ -24,7 +24,11 @@ def make_agent(name: str, seed: int, mcts_iterations: int, mcts_worlds: int):
         return MCTSAgent(
             iterations=mcts_iterations, determinizations=mcts_worlds, seed=seed
         )
-    raise SystemExit(f"unknown agent {name!r} (choose: random, greedy, mcts)")
+    if name == "policy":
+        from riftbound.agents.policy_agent import PolicyAgent  # lazy: imports torch
+
+        return PolicyAgent.from_checkpoint(checkpoint, seed=seed)
+    raise SystemExit(f"unknown agent {name!r} (choose: random, greedy, mcts, policy)")
 
 
 def main() -> None:
@@ -39,14 +43,19 @@ def main() -> None:
     )
     parser.add_argument("--mcts-iterations", type=int, default=60)
     parser.add_argument("--mcts-worlds", type=int, default=4)
+    parser.add_argument(
+        "--checkpoint",
+        default="checkpoints/latest.pt",
+        help="checkpoint path for the 'policy' agent",
+    )
     args = parser.parse_args()
 
     decks = (build_annie_deck(), build_yi_deck())
     if args.swap_decks:
         decks = (decks[1], decks[0])
     agents = (
-        make_agent(args.p0, args.seed, args.mcts_iterations, args.mcts_worlds),
-        make_agent(args.p1, args.seed + 1, args.mcts_iterations, args.mcts_worlds),
+        make_agent(args.p0, args.seed, args.mcts_iterations, args.mcts_worlds, args.checkpoint),
+        make_agent(args.p1, args.seed + 1, args.mcts_iterations, args.mcts_worlds, args.checkpoint),
     )
 
     start = time.perf_counter()

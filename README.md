@@ -2,7 +2,7 @@
 
 An AI that learns to play [Riftbound](https://playriftbound.com/) (the League
 of Legends TCG), built simulator-first: a Python rules engine, scripted
-baseline agents, and (coming) self-play reinforcement learning.
+baseline agents, determinized MCTS, and self-play PPO reinforcement learning.
 
 ## Why a simulator?
 
@@ -47,11 +47,21 @@ python -m riftbound.cli --games 100 --p0 greedy --p1 random
   tensors from one player's perspective (opponent hand/decks hidden), and a
   flat discrete action table with a legality mask (`ActionCodec`) — the
   interface layer for search and RL agents.
+- **Self-play PPO** (`src/riftbound/rl/`): a masked policy/value MLP trained
+  by playing itself, parallelized across CPU cores (the simulator, not the
+  network, is the bottleneck — no GPU needed at this scale). Resumable
+  checkpoints, JSONL metrics, periodic evals vs the scripted ladder:
+
+  ```powershell
+  python -m riftbound.rl.train --iterations 200 --games-per-iter 64 --workers 10
+  python -m riftbound.cli --games 20 --p0 policy --p1 greedy --checkpoint checkpoints/latest.pt
+  ```
 
 ## Roadmap
 
 1. ~~Rules engine core + starter decks + scripted agents~~ (done)
 2. ~~State/action tensor encodings with legality masks~~ (done)
 3. ~~Determinized MCTS (hidden information via sampled worlds)~~ (done)
-4. Self-play RL (PPO or AlphaZero-style policy+value net)
-5. Reaction/chain system; broader card coverage
+4. ~~Self-play RL (PPO policy+value net, parallel CPU self-play)~~ (done)
+5. League-style opponent pools; AlphaZero-style policy-guided search
+6. Reaction/chain system; broader card coverage

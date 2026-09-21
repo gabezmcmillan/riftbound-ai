@@ -139,8 +139,43 @@ worlds) it wins 7-3 with the Yi deck but loses 1-9 with the Annie deck; at
 strength scales with search budget. Note the decks are not balanced — the
 Yi deck wins most mirror-agent pairings — so always benchmark both seats.
 
+## Self-play PPO (implemented)
+
+`src/riftbound/rl/` — trained and evaluated entirely on CPU, deliberately:
+the policy/value net is a ~1M-parameter MLP and the wall-clock bottleneck
+is the pure-Python simulator, so throughput comes from parallel self-play
+worker processes, not a GPU.
+
+- `network.py`: `PolicyValueNet`, a 2-layer MLP trunk (default hidden 512)
+  over the 1,129-float observation with a masked policy head over the
+  821-entry action table (illegal logits forced to -1e9 before the softmax)
+  and a tanh value head in [-1, 1]. Near-uniform policy init.
+- `selfplay.py`: the current policy plays both seats; each player's step
+  sequence is one episode with terminal reward +1/-1 (0 on turn-limit
+  draws) and GAE(lambda) advantages. Deck pairings and first player rotate
+  every game. `collect_parallel` broadcasts the state_dict to a persistent
+  spawn-safe process pool (1 torch thread per worker).
+- `train.py`: standard clipped PPO (ratio clip 0.2, value MSE, entropy
+  bonus, advantage normalization, grad clipping), minibatched over a few
+  epochs per iteration. Checkpoints carry model + optimizer + iteration +
+  card vocabulary, so runs resume from `checkpoints/latest.pt`
+  automatically and `PolicyAgent.from_checkpoint` rebuilds matching
+  encoders. Metrics stream to `checkpoints/train_log.jsonl`; every N
+  iterations the greedy-argmax policy is benchmarked against the
+  random/greedy ladder.
+- `agents/policy_agent.py`: `PolicyAgent` wraps a net as a standard agent
+  (argmax by default). CLI: `--p0 policy --checkpoint checkpoints/latest.pt`.
+
+Design notes: value/reward scale is matched by construction (tanh head,
+terminal-only ±1 reward, gamma 0.997 to mildly prefer faster wins). The
+opponent-pool/league mechanism (sampling past checkpoints as opponents) is
+not built yet — pure current-policy self-play is v0.
+
 ## Next steps
 
-1. **Self-play PPO** against the random/greedy/MCTS ladder, league-style.
+1. **League play**: mix past checkpoints and scripted agents into the
+   self-play opponent pool to prevent self-play cycling.
 2. **v1 engine**: reaction windows (start with Action/Reaction spells in
    showdowns), agent-controlled damage assignment, mulligans.
+3. **AlphaZero-style**: policy/value-guided MCTS + self-play distillation;
+   this is the point where batched GPU inference starts paying off.
