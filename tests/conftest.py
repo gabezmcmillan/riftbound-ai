@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+import riftbound.cards  # noqa: F401  (register the real OGN subset up front)
 from riftbound.engine import cards as cards_mod
 from riftbound.engine.cards import (
     BattlefieldDef,

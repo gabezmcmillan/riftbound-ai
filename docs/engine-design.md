@@ -96,12 +96,29 @@ exposes everything to whoever holds the object; the (future) observation
 encoder is responsible for masking to a player's view. Search agents must
 use determinization or IS-MCTS rather than raw tree search.
 
+## Encodings (implemented)
+
+`src/riftbound/encoding.py`:
+
+- `ObservationEncoder.encode(game, pidx)`: fixed-size float32 vector — own
+  hand as card counts; both trashes and champion zones (public); 12 unit
+  slots per side (card one-hot + might/damage/status/location features);
+  runes per domain (ready/exhausted) and rune-deck sizes; resource gear;
+  battlefield controller/scored flags; score/hand/deck/turn scalars. The
+  opponent's hand appears only as a size and decks only as sizes (hidden
+  information is never encoded).
+- `ActionCodec`: fixed table over the card vocabulary — end turn; play unit
+  (card x destination); play champion (destination); play gear; play spell
+  (card x target-ref combos, where refs are unit slots or battlefields);
+  move unit (slot x destination); all-ready-base-units attack per
+  battlefield. `legal_mask(game)` marks currently-legal indices (guaranteed
+  step-able); `decode(idx, game)` returns the engine action.
+- Codec limitation: arbitrary move subsets aren't addressable (single-unit
+  moves and all-in attacks only). Fix alongside the v1 engine work.
+
 ## Next steps
 
-1. **Encodings**: fixed-size observation tensor (own hand, board, runes,
-   battlefields, opponent visibles, score) + flat action indexing with a
-   legality mask.
-2. **Determinized MCTS** baseline over the engine.
-3. **Self-play PPO** against the greedy/random ladder, league-style.
-4. **v1 engine**: reaction windows (start with Action/Reaction spells in
+1. **Determinized MCTS** baseline over the engine.
+2. **Self-play PPO** against the greedy/random ladder, league-style.
+3. **v1 engine**: reaction windows (start with Action/Reaction spells in
    showdowns), agent-controlled damage assignment, mulligans.
